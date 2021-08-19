@@ -1,0 +1,7 @@
+FROM staging-omnimerse/nginx-geoip:latest
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 3000
+STOPSIGNAL SIGTERM
+
+CMD ["nginx", "-g", "daemon off;"]

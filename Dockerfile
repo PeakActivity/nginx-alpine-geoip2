@@ -1,10 +1,17 @@
-FROM alpine:3.11
+FROM alpine:3.14
 
-COPY GeoLite2-Country.mmdb /usr/share/geoip/
+ARG LICENSE_KEY
+
+RUN wget "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=${LICENSE_KEY}j&suffix=tar.gz" -O geoip.tar.gz \
+	&& mkdir GeoLite2-City \
+	&& tar xf "geoip.tar.gz" -C GeoLite2-City --strip-components 1 \
+	&& cd GeoLite2-City && ls -l \
+	&& mkdir /usr/share/geoip \
+	&& cp GeoLite2-City.mmdb /usr/share/geoip/
 
 # Install libmaxminddb and ngx_http_geoip2_module
 
-ENV MAXMIND_VERSION=1.2.1
+ENV MAXMIND_VERSION=1.6.0
 
 RUN set -x \
   && apk add --no-cache --virtual .build-deps \
@@ -26,7 +33,7 @@ RUN ldconfig || :
 
 # Install nginx
 
-ENV NGINX_VERSION 1.15.11
+ENV NGINX_VERSION 1.19.10
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -164,8 +171,3 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
-
-STOPSIGNAL SIGTERM
-
-CMD ["nginx", "-g", "daemon off;"]
